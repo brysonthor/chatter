@@ -21,10 +21,23 @@ print 'it is now connected'
 conn.send('Welcome to Bryson\'s Chat room\r\n')
 
 data = conn.recv(BUFSIZE)
-while data.lower() != 'adios\r\n':
-    if data == 'help\r\n':
-            conn.send('list of commands and syntax')
-    elif data == '
+
+while data.lower().startswith('adios'):
+    if data.lower().startswith('help'):
+        conn.send('list of commands and syntax')
+    elif data.lower().startswith("test:"):
+        conn.send('test')
+    elif data.lower().startswith("name:"):
+        conn.send('name')
+    elif data.lower().startswith("get"):
+        conn.send('get')
+    elif data.lower().startswith("push:"):
+        conn.send('push')
+    elif data.lower().startswith("getrange"):
+        conn.send('get range')
+    else:
+        conn.send('did not understand')
+    data = conn.recv(BUFSIZE)
 
 
 conn.close()
