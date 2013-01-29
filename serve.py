@@ -23,7 +23,7 @@ try:
 
     data = conn.recv(BUFSIZE)
 
-    while data.lower().startswith('adios'):
+    while not data.lower().startswith('adios'):
         if data.lower().startswith('help'):
             conn.send('list of commands and syntax')
         elif data.lower().startswith("test:"):
