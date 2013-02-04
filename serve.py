@@ -1,5 +1,6 @@
 #!/usr/bin/python
 from socket import *
+from thread import *
 HOST = ''
 PORT = 9020
 ADDR = (HOST,PORT)
@@ -20,45 +21,56 @@ serversocket = socket(AF_INET,SOCK_STREAM)
 # and a well-known port
 serversocket.bind((ADDR))
 #become a server socket
-serversocket.listen(2)
+serversocket.listen(5)
 
 print 'waiting for connection request'
 
-conn,addr = serversocket.accept()
-print 'it is now connected'
+def clientthread(conn):
 
-try:
-    conn.send('Welcome to Bryson\'s Chat room\r\n')
+    try:
+        conn.send('Welcome to Bryson\'s Chat room\r\n')
 
-    data = conn.recv(BUFSIZE)
-
-    while not data.lower().startswith('adios'):
-        cleaned = data.lower()
-	if cleaned.startswith('help'):
-            conn.send(HELP_MESSAGE)
-        elif cleaned.startswith("test:"):
-            words = cleaned.split(':')[1]
-            conn.send(words)
-        elif cleaned.startswith("name:"):
-            CHATNAME = cleaned.split(':')[1]
-            conn.send('OK\r\n')
-        elif cleaned.startswith("get"):
-            conn.send(str(CHAT_BUFFER))
-        elif cleaned.startswith("push:"):
-            CHAT_BUFFER.append(cleaned.split(':')[1])
-            conn.send('OK\r\n')
-        elif cleaned.startswith("getrange"):
-            numbers = cleaned.split()
-            one = int(numbers[1])
-            two = int(numbers[2])
-            chat_ranged = []
-            for i in range(one, two):
-                chat_ranged.append(CHAT_BUFFER[i])
-            conn.send(str(chat_ranged))
-        else:
-            conn.send('did not understand')
         data = conn.recv(BUFSIZE)
-    conn.close()
-except:
-    conn.send("Something Broke")
-    conn.close()
+
+        while not data.lower().startswith('adios'):
+            cleaned = data.lower()
+	    if cleaned.startswith('help'):
+                conn.send(HELP_MESSAGE)
+            elif cleaned.startswith("test:"):
+                words = cleaned.split(': ')[1]
+                conn.send(words)
+            elif cleaned.startswith("name:"):
+                CHATNAME = cleaned.split(': ')[1]
+                conn.send('OK\r\n')
+            elif cleaned.startswith("getrange"):
+                numbers = cleaned.split()
+                one = int(numbers[1])
+                two = int(numbers[2])
+                if one < 0 or one > len(CHAT_BUFFER):
+                    conn.send('Out of Range')
+                elif two < 0 or two > len(CHAT_BUFFER):
+                    conn.send('Out of Range')
+                else:
+                    chat_ranged = []
+                    for i in range(one+1, two+1):
+                        chat_ranged.append(CHAT_BUFFER[i])
+                    conn.send(str(chat_ranged))
+            elif cleaned.startswith("get"):
+                conn.send(str(CHAT_BUFFER))
+            elif cleaned.startswith("push:"):
+                CHAT_BUFFER.append(cleaned.split(': ')[1])
+                conn.send('OK\r\n')
+            else:
+                conn.send('did not understand')
+            data = conn.recv(BUFSIZE)
+        conn.close()
+    except:
+        conn.send("Something Broke")
+        conn.close()
+while True:
+    conn,addr = serversocket.accept()
+    print 'it is now connected'
+    start_new_thread(clientthread,(conn,))
+conn.close()
+sock.close()
+
