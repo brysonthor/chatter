@@ -1,10 +1,11 @@
 #!/usr/bin/python
-from socket import *
-from thread import *
+from socket import socket, AF_INET, SOCK_STREAM
+from thread import start_new_thread
 HOST = ''
 PORT = 9020
 ADDR = (HOST,PORT)
 BUFSIZE = 4096
+KILL_SERVER = False
 HELP_MESSAGE = """Client request \"help<cr><lf>\" receives a response of a list of the commands and their syntax.\n
 		Client request \"test: words<cr><lf>\"  receives a response of \"words<cr><lf>\".\n
 		Client request \"name: <chatname><cr><lf>\" receives a response of \"OK<cr><lf>\".\n
@@ -25,24 +26,24 @@ print 'waiting for connection request'
 
 def clientthread(conn):
 
-    CHATNAME = ''
-    CHAT_BUFFER= []
     try:
         conn.send('Welcome to Bryson\'s Chat room\r\n')
 
         data = conn.recv(BUFSIZE)
 
+        CHATNAME = ''
+        CHAT_BUFFER= []
         while not data.lower().startswith('adios'):
             cleaned = data.lower()
-	    if cleaned.startswith('help'):
+            if cleaned.startswith('help'):
                 conn.send(HELP_MESSAGE)
-            elif cleaned.startswith("test:"):
+            elif cleaned.startswith("test: "):
                 words = cleaned.split(': ')[1]
                 conn.send(words+'\r\n')
-            elif cleaned.startswith("name:"):
+            elif cleaned.startswith("name: "):
                 CHATNAME = cleaned.split(': ')[1]
                 conn.send('OK\r\n')
-            elif cleaned.startswith("getrange"):
+            elif cleaned.startswith("getrange "):
                 numbers = cleaned.split()
                 one = int(numbers[1])
                 two = int(numbers[2])
@@ -56,9 +57,13 @@ def clientthread(conn):
                         chat_ranged.append(CHAT_BUFFER[i])
                     conn.send(str(chat_ranged)+'\r\n')
             elif cleaned.startswith("get"):
-                conn.send(str(CHAT_BUFFER)+'\r\n')
-            elif cleaned.startswith("push:"):
-                CHAT_BUFFER.append(cleaned.split(': ')[1])
+                from pprint import pformat
+                conn.send(pformat(CHAT_BUFFER)+'\r\n')
+            elif cleaned.startswith("push: "):
+                CHAT_BUFFER.append(CHATNAME+': '+str(cleaned.split(': ')[1]))
+                conn.send('OK\r\n')
+            elif cleaned.startswith("kill it clean"):
+                KILL_SERVER=True
                 conn.send('OK\r\n')
             else:
                 conn.send('did not understand\r\n')
@@ -67,10 +72,10 @@ def clientthread(conn):
     except:
         conn.send("Something Broke\r\n")
         conn.close()
-while True:
+while not KILL_SERVER:
     conn,addr = serversocket.accept()
     print 'it is now connected'
     start_new_thread(clientthread,(conn,))
 conn.close()
-sock.close()
+serversocket.close()
 
