@@ -1,8 +1,9 @@
 #!/usr/bin/python
 from socket import *
+import sys
 
-HOST = 'localhost'
-PORT = 9020
+HOST = sys.argv[1]
+PORT = int(sys.argv[2])
 ADDR = (HOST,PORT)
 BUFSIZE = 4096
 
