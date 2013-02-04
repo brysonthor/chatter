@@ -60,4 +60,5 @@ try:
         data = conn.recv(BUFSIZE)
     conn.close()
 except:
+    conn.send("Something Broke")
     conn.close()
