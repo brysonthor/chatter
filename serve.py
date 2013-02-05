@@ -55,10 +55,13 @@ def clientthread(conn):
                     chat_ranged = []
                     for i in range(one, two):
                         chat_ranged.append(CHAT_BUFFER[i])
-                    conn.send(str(chat_ranged)+'\r\n')
+                    import pprint
+                    pp = pprint.PrettyPrinter(width=30)
+                    conn.send(pp.pformat(chat_ranged)+'\r\n')
             elif cleaned.startswith("get"):
-                from pprint import pformat
-                conn.send(pformat(CHAT_BUFFER)+'\r\n')
+                import pprint
+                pp=pprint.PrettyPrinter(width=30)
+                conn.send(pp.pformat(CHAT_BUFFER)+'\r\n')
             elif cleaned.startswith("push: "):
                 CHAT_BUFFER.append(CHATNAME+': '+str(cleaned.split(': ')[1]))
                 conn.send('OK\r\n')
