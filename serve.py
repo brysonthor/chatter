@@ -14,6 +14,7 @@ HELP_MESSAGE = """Client request \"help<cr><lf>\" receives a response of a list 
 		Client request \"getrange <startline> <endline><cr><lf>\" receives a response of lines <startline> through <endline> from the chat buffer.\n
 		Client request \"adios<cr><lf>\" will quit the current connection\r\n
 		"""
+CHAT_BUFFER= []
 #create an INET, STREAMing socket
 serversocket = socket(AF_INET,SOCK_STREAM)
 #bind the socket to a public host,
@@ -31,8 +32,7 @@ def clientthread(conn):
 
         data = conn.recv(BUFSIZE)
 
-        CHATNAME = ''
-        CHAT_BUFFER= []
+        CHATNAME = 'unknown'
         while not data.lower().startswith('adios'):
             cleaned = data.lower()
             if cleaned.startswith('help'):
@@ -72,10 +72,11 @@ def clientthread(conn):
     except:
         conn.send("Something Broke\r\n")
         conn.close()
-while not KILL_SERVER:
-    conn,addr = serversocket.accept()
-    print 'it is now connected'
-    start_new_thread(clientthread,(conn,))
-conn.close()
-serversocket.close()
+try:
+    while not KILL_SERVER:
+        conn,addr = serversocket.accept()
+        print 'it is now connected'
+        start_new_thread(clientthread,(conn,))
+except:
+   serversocket.close()
 
